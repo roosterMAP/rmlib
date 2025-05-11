@@ -1,0 +1,2 @@
+rmlib gets built into a python module and stored on PyPi.
+Build wheel distributables with build_whl.bat then run "twine upload dist/*" to upload dist to PyPi. Put .pypirc file in home dir with token.
