@@ -99,8 +99,12 @@ class rmPolygonSet( list ):
 				continue
 			hit = mathutils.geometry.intersect_point_tri_2d( mouse_pos, mathutils.Vector( sp1 ), mathutils.Vector( sp2 ), mathutils.Vector( sp3 ) )
 			if hit:
-				tri_center = ( wld_spc_vpos[tri[0].vert.index] + wld_spc_vpos[tri[1].vert.index] + wld_spc_vpos[tri[2].vert.index] ) * 0.33333333333
-				d = ( tri_center - view_pos ).length
+				hit_coord = mathutils.geometry.barycentric_transform(
+					mouse_pos,
+					mathutils.Vector(sp1), mathutils.Vector(sp2), mathutils.Vector(sp3),
+					tri[0].vert.co, tri[1].vert.co, tri[2].vert.co
+				)				
+				d = ( hit_coord - view_pos ).length
 				if d < min_dist:
 					min_dist = d
 					mos_face = tri[0].face
