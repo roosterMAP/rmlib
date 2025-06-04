@@ -100,10 +100,10 @@ class rmPolygonSet( list ):
 			hit = mathutils.geometry.intersect_point_tri_2d( mouse_pos, mathutils.Vector( sp1 ), mathutils.Vector( sp2 ), mathutils.Vector( sp3 ) )
 			if hit:
 				hit_coord = mathutils.geometry.barycentric_transform(
-					mouse_pos,
-					mathutils.Vector(sp1), mathutils.Vector(sp2), mathutils.Vector(sp3),
+					mathutils.Vector( ( mouse_pos[0], mouse_pos[1], 0.0 ) ),
+					mathutils.Vector( ( sp1[0], sp1[1], 0.0 ) ), mathutils.Vector( ( sp2[0], sp2[1], 0.0 ) ), mathutils.Vector( ( sp3[0], sp3[1], 0.0 ) ),
 					tri[0].vert.co, tri[1].vert.co, tri[2].vert.co
-				)				
+				)
 				d = ( hit_coord - view_pos ).length
 				if d < min_dist:
 					min_dist = d

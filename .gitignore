@@ -1,4 +1,4 @@
-
+rmlib.egg-info/*
 *.zip
 *.mdmp
 *.whl
