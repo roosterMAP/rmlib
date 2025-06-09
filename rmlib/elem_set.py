@@ -67,44 +67,20 @@ class rmPolygonSet( list ):
 
 	@classmethod
 	def from_mos( cls, rmmesh, context, mouse_pos, ignore_backfacing=True, ignore_hidden=True ):
-		rm_vp = util.rmViewport( context )
-		look_idx, look_vec, axis_vec = rm_vp.get_nearest_direction_vector( 'front' )
-		look_vec_obj = rmmesh.world_transform.to_3x3().inverted() @ look_vec
-		look_vec_obj.normalize()
+		# Transform ray into bmesh/object local space
+		view_vector = view3d_utils.region_2d_to_vector_3d(context.region, context.region_data, mouse_pos)
+		ray_origin = view3d_utils.region_2d_to_origin_3d(context.region, context.region_data, mouse_pos)
 
-		xfrm = rmmesh.world_transform
-		view_pos = rm_vp.cam_pos
+		world_to_local = rmmesh.world_transform.inverted()
+		ray_origin_local = world_to_local @ ray_origin
+		ray_direction_local = (world_to_local.to_3x3() @ view_vector).normalized()
 
-		wld_spc_vpos = [None] * len( rmmesh.bmesh.verts )
-		active_faces = cls()
-		for f in rmmesh.bmesh.faces:
-			if ignore_hidden and f.hide:
-				continue
-			if ignore_backfacing and f.normal.dot( look_vec_obj ) > 0.0:
-				continue
-			active_faces.append( f )
-			for v in f.verts:
-				if wld_spc_vpos[v.index] is None:
-					wld_spc_vpos[v.index] = xfrm @ v.co.copy()
-
-		min_dist = 999999999.9
+		min_dist = float('inf')
 		mos_face = None
-		for tri in rmmesh.bmesh.calc_loop_triangles():
-			if tri[0].face not in active_faces:
-				continue
-			sp1 = view3d_utils.location_3d_to_region_2d( region=context.region, rv3d=context.region_data, coord=wld_spc_vpos[tri[0].vert.index] )
-			sp2 = view3d_utils.location_3d_to_region_2d( region=context.region, rv3d=context.region_data, coord=wld_spc_vpos[tri[1].vert.index] )
-			sp3 = view3d_utils.location_3d_to_region_2d( region=context.region, rv3d=context.region_data, coord=wld_spc_vpos[tri[2].vert.index] )
-			if sp1 is None or sp2 is None or sp3 is None:
-				continue
-			hit = mathutils.geometry.intersect_point_tri_2d( mouse_pos, mathutils.Vector( sp1 ), mathutils.Vector( sp2 ), mathutils.Vector( sp3 ) )
-			if hit:
-				hit_coord = mathutils.geometry.barycentric_transform(
-					mathutils.Vector( ( mouse_pos[0], mouse_pos[1], 0.0 ) ),
-					mathutils.Vector( ( sp1[0], sp1[1], 0.0 ) ), mathutils.Vector( ( sp2[0], sp2[1], 0.0 ) ), mathutils.Vector( ( sp3[0], sp3[1], 0.0 ) ),
-					tri[0].vert.co, tri[1].vert.co, tri[2].vert.co
-				)
-				d = ( hit_coord - view_pos ).length
+		for tri in rmmesh.bmesh.calc_loop_triangles():			
+			hit_coord = mathutils.geometry.intersect_ray_tri( tri[0].vert.co, tri[1].vert.co, tri[2].vert.co, ray_direction_local, ray_origin_local, True )
+			if hit_coord is not None:
+				d = ( hit_coord - ray_origin_local ).length
 				if d < min_dist:
 					min_dist = d
 					mos_face = tri[0].face

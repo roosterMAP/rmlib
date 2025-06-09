@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "rmlib"
-version = "0.1.2"
+version = "0.1.3"
 description = "Shared utility library for Blender addons"
 authors = [{name = "Timothee Yeramian", email = "lead.acrysoft@gmail.com"}]
 readme = "README.md"
